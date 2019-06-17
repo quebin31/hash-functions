@@ -24,10 +24,9 @@ def digest(input_data, hash_fn, key, hex_input=False, hex_key=True, bsize=64):
         key = common.utf8_to_hex(key)
 
     if len(key) > (bsize * 2):
-        hash_fn.digest(key, hex_input=True)
-    else:
-        key += '0' * (bsize * 2 - len(key))
-        
+        key = hash_fn.digest(key, hex_input=True)
+
+    key += '0' * (bsize * 2 - len(key))
     key = common.hex_to_uint32(common.segmentize_data(key))
 
     i32 = np.uint32(int('36' * 4, 16))
@@ -47,5 +46,8 @@ def digest(input_data, hash_fn, key, hex_input=False, hex_key=True, bsize=64):
 if __name__ == '__main__':
     assert(digest('Hi There', 'MD5', '0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b')
            == '9294727a3638bb1c13f48ef8158bfc9d')
+    assert(digest('54657374205573696e67204c6172676572205468616e20426c6f636b2d53697a65204b6579202d2048617368204b6579204669727374',
+                  'SHA-256', 'aa' * 131, hex_input=True)
+           == '60e431591ee0b67f0d8a26aacbf5b77f8e0bc6213728c5140546040f0ee37f54')
 
     print('OK!')
