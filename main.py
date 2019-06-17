@@ -14,6 +14,7 @@ class MainDialog(QtWidgets.QDialog, Ui_Dialog):
     def __init__(self, *args, **kwargs):
         QtWidgets.QDialog.__init__(self, *args, **kwargs)
         self.setupUi(self)
+        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowMinimizeButtonHint)
 
         self.browseFileButton.clicked.connect(self.openFileDialog)
         self.setupProcessButton()
