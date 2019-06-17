@@ -64,7 +64,7 @@ class MainDialog(QtWidgets.QDialog, Ui_Dialog):
                 return
 
             stream = QtCore.QTextStream(file)
-            self.contents = stream.readAll()
+            self.contents = stream.readAll()[:-1]
         else:
             self.contents = self.keyboardInputText.toPlainText()
 
@@ -126,7 +126,7 @@ class MainDialog(QtWidgets.QDialog, Ui_Dialog):
     def processHMAC(self):
         if not self.key:
             return 
-        
+
         try:
             digest = hmac.digest(self.contents, self.hash_fn, self.key, self.hex_input,
                                  self.hex_key)
