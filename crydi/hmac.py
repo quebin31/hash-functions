@@ -3,43 +3,46 @@ import crydi.md5 as md5
 import crydi.sha1 as sha1
 import crydi.sha256 as sha256 
 import crydi.common as common
-import numpy as np
 
-def digest(input_data, hash_fn, key, hex_input=False, hex_key=True, bsize=64):
+HASH_FN = {
+    'MD4': md4,
+    'MD5': md5,
+    'SHA-1': sha1,
+    'SHA-256': sha256,
+}
+
+def digest(input_data, hash_fn, key, hex_input=False, hex_key=True, encoding='utf-8'):
     if not key:
         raise RuntimeError('Not given key!')
 
-    if hash_fn == 'MD4':
-        hash_fn = md4
-    elif hash_fn == 'MD5':
-        hash_fn = md5
-    elif hash_fn == 'SHA-1':
-        hash_fn = sha1
-    elif hash_fn == 'SHA-256':
-        hash_fn = sha256
-    else: 
-        raise RuntimeError(f'Unknown hash function {hash_fn}')
+    hash_fn    = HASH_FN[hash_fn]
+    block_size = hash_fn.BLOCK_SIZE
 
-    if not hex_key:
-        key = common.utf8_to_hex(key)
+    key = common.fromhex(key) if hex_key else common.encode(key, encoding)
+    if len(key) > block_size:
+        key = ''.join(f'{byte:02x}' for byte in key)
+        key = hash_fn.digest(key, hex_input=True, encoding=encoding)
+        key = common.fromhex(key)
 
-    if len(key) > (bsize * 2):
-        key = hash_fn.digest(key, hex_input=True)
+    while len(key) != block_size:
+        key.append(0x00)
 
-    key += '0' * (bsize * 2 - len(key))
-    key = common.hex_to_uint32(common.segmentize_data(key))
+    ipad = 0x36
+    opad = 0x5c
 
-    i32 = np.uint32(int('36' * 4, 16))
-    o32 = np.uint32(int('5c' * 4, 16))
-
-    kipad = ''.join(f'{k ^ i32:08x}' for k in key)
-    kopad = ''.join(f'{k ^ o32:08x}' for k in key)
+    kipad = [k ^ ipad for k in key]
+    kopad = [k ^ opad for k in key]
 
     if not hex_input:
-        input_data = common.utf8_to_hex(input_data)
+        input_data = common.encode(input_data, encoding=encoding)
+    else:
+        input_data = common.fromhex(input_data)
 
-    output = hash_fn.digest(kipad + input_data, hex_input=True)
-    output = hash_fn.digest(kopad + output, hex_input=True)
+    data   = ''.join(f'{byte:02x}' for byte in (kipad + input_data))
+    output = hash_fn.digest(data, hex_input=True)
+
+    data   = ''.join(f'{byte:02x}' for byte in kopad) + output
+    output = hash_fn.digest(data, hex_input=True)
 
     return output
 
