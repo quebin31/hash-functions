@@ -64,7 +64,7 @@ class MainDialog(QtWidgets.QDialog, Ui_Dialog):
                 return
 
             stream = QtCore.QTextStream(file)
-            self.contents = stream.readAll()[:-1]
+            self.contents = stream.readAll()
         else:
             self.contents = self.keyboardInputText.toPlainText()
 
