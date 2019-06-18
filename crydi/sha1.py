@@ -4,6 +4,8 @@ import crydi.common as common
 # =================================================================================
 # Auxiliar variables
 # =================================================================================
+BLOCK_SIZE = 64
+
 K = np.array([ 0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xca62c1d6 ], dtype=np.uint32)
 
 # =================================================================================
@@ -23,13 +25,20 @@ def expand_word(block, i):
     return common.rotate_left(value, 1)
 # =================================================================================
 
-def digest(input_data, hex_input=False, IV=(None, None, None, None, None)):
-    input_data = common.prepare_data(input_data, hex_input, little_endian=False)
-    HA = np.uint32(IV[0] or 0x67452301)
-    HB = np.uint32(IV[1] or 0xefcdab89)
-    HC = np.uint32(IV[2] or 0x98badcfe)
-    HD = np.uint32(IV[3] or 0x10325476)
-    HE = np.uint32(IV[4] or 0xc3d2e1f0)
+def digest(input_data, hex_input=False, encoding='utf-8'):
+    input_data = common.prepare_data(
+        input_data  = input_data,
+        hex_input   = hex_input,
+        word_size   = 4,
+        byte_format = common.ByteFormat.BigEndian,
+        encoding    = encoding
+    )
+
+    HA = np.uint32(0x67452301)
+    HB = np.uint32(0xefcdab89)
+    HC = np.uint32(0x98badcfe)
+    HD = np.uint32(0x10325476)
+    HE = np.uint32(0xc3d2e1f0)
 
     # Iterate over each 512-bit block
     for i in range(len(input_data) // 16):
@@ -77,4 +86,5 @@ if __name__ == '__main__':
            == '84983e441c3bd26ebaae4aa1f95129e5e54670f1')
     assert(digest('abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu')
            == 'a49b2446a02c645bf419f995b67091253a04a259')
+    assert(digest('ó') == 'a6abd767c025f163792b3f6d1fec94a731abce06')
     print('OK!')

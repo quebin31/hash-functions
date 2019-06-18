@@ -4,6 +4,8 @@ import crydi.common as common
 # =================================================================================
 # Auxiliar variables
 # =================================================================================
+BLOCK_SIZE = 64
+
 S = np.array([[7, 12, 17, 22], [5, 9, 14, 20], [4, 11, 16, 23], [6, 10, 15, 21]])
 
 T  = np.array([
@@ -42,12 +44,19 @@ def I(b, c, d):
     return np.uint32(c ^ (b | ~d))
 # =================================================================================
 
-def digest(input_data, hex_input=False, IV=(None, None, None, None)):
-    input_data = common.prepare_data(input_data, hex_input, little_endian=True)
-    A = np.uint32(IV[0] or 0x67452301)
-    B = np.uint32(IV[1] or 0xefcdab89)
-    C = np.uint32(IV[2] or 0x98badcfe)
-    D = np.uint32(IV[3] or 0x10325476)
+def digest(input_data, hex_input=False, encoding='utf-8'):
+    input_data = common.prepare_data(
+        input_data  = input_data,
+        hex_input   = hex_input,
+        word_size   = 4,
+        byte_format = common.ByteFormat.LittleEndian,
+        encoding    = encoding
+    )
+
+    A = np.uint32(0x67452301)
+    B = np.uint32(0xefcdab89)
+    C = np.uint32(0x98badcfe)
+    D = np.uint32(0x10325476)
 
     # Iterate over each 512-bit block
     for i in range(len(input_data) // 16):
@@ -81,8 +90,11 @@ def digest(input_data, hex_input=False, IV=(None, None, None, None)):
         C = C + OLD_C
         D = D + OLD_D
 
+    A = common.little_endian(A)
+    B = common.little_endian(B)
+    C = common.little_endian(C)
+    D = common.little_endian(D)
     digest = [f'{A:08x}', f'{B:08x}', f'{C:08x}',  f'{D:08x}']
-    digest = common.big_to_little(digest)
     digest = ''.join(f'{digest[i]}' for i in range(0, 4))
     return digest
 
@@ -96,5 +108,5 @@ if __name__ == '__main__':
            == 'd174ab98d277d9f5a5611c2c9f419d9f')
     assert(digest('12345678901234567890123456789012345678901234567890123456789012345678901234567890')
            == '57edf4a22be3c955ac49da2e2107b67a')
-
+    assert(digest('ó') == '5ab838a6f466a5fe1ddbc08340cc21f1')
     print('OK!')

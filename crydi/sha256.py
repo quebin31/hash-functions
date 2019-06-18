@@ -4,6 +4,8 @@ import crydi.common as common
 # =================================================================================
 # Auxiliar variables
 # =================================================================================
+BLOCK_SIZE = 64
+
 K = np.array([
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
     0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
@@ -50,17 +52,23 @@ def expand_word(block, i):
     return np.uint32(s0 + s1)
 # =================================================================================
 
-def digest(input_data, hex_input=False, IV=(None, None, None, None, None, None, None, None)):
-    input_data = common.prepare_data(input_data, hex_input, little_endian=False)
+def digest(input_data, hex_input=False, encoding='utf-8'):
+    input_data = common.prepare_data(
+        input_data  = input_data,
+        hex_input   = hex_input,
+        word_size   = 4,
+        byte_format = common.ByteFormat.BigEndian,
+        encoding    = encoding
+    )
 
-    HA = np.uint32(IV[0] or 0x6a09e667)
-    HB = np.uint32(IV[1] or 0xbb67ae85)
-    HC = np.uint32(IV[2] or 0x3c6ef372)
-    HD = np.uint32(IV[3] or 0xa54ff53a)
-    HE = np.uint32(IV[4] or 0x510e527f)
-    HF = np.uint32(IV[5] or 0x9b05688c)
-    HG = np.uint32(IV[6] or 0x1f83d9ab)
-    HH = np.uint32(IV[7] or 0x5be0cd19)
+    HA = np.uint32(0x6a09e667)
+    HB = np.uint32(0xbb67ae85)
+    HC = np.uint32(0x3c6ef372)
+    HD = np.uint32(0xa54ff53a)
+    HE = np.uint32(0x510e527f)
+    HF = np.uint32(0x9b05688c)
+    HG = np.uint32(0x1f83d9ab)
+    HH = np.uint32(0x5be0cd19)
 
     # Iterate over each 512-bit block
     for i in range(len(input_data) // 16):
@@ -114,6 +122,8 @@ if __name__ == '__main__':
            '248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1')
     assert(digest('abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu')
            == 'cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1')
+    assert(digest('ó')
+           == 'aa2f86f8e3c3e2237b6c42bcb824f41402eed1c9b9a16bb80576c2002c4c01e3')
     print('OK!')
 
 

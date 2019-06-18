@@ -4,6 +4,8 @@ import crydi.common as common
 # =================================================================================
 # Auxiliar variables
 # =================================================================================
+BLOCK_SIZE = 64
+
 S = np.array([[3, 7, 11, 19], [3, 5, 9, 13], [3, 9, 11, 15]]) 
 
 THIRD_ROUND = np.array([
@@ -26,8 +28,15 @@ def H(x, y, z):
     return np.uint32(x ^ y ^ z)
 # =================================================================================
 
-def digest(input_data, hex_input=False):
-    input_data = common.prepare_data(input_data, hex_input, little_endian=True)
+def digest(input_data, hex_input=False, encoding='utf-8'):
+    input_data = common.prepare_data(
+        input_data  = input_data,
+        hex_input   = hex_input,
+        word_size   = 4,
+        byte_format = common.ByteFormat.LittleEndian,
+        encoding    = encoding
+    )
+
     A = np.uint32(0x67452301)
     B = np.uint32(0xefcdab89)
     C = np.uint32(0x98badcfe)
@@ -62,8 +71,12 @@ def digest(input_data, hex_input=False):
         C = C + OLD_C
         D = D + OLD_D
 
+    A = common.little_endian(A)
+    B = common.little_endian(B)
+    C = common.little_endian(C)
+    D = common.little_endian(D)
+
     digest = [f'{A:08x}', f'{B:08x}', f'{C:08x}',  f'{D:08x}']
-    digest = common.big_to_little(digest)
     digest = ''.join(f'{digest[i]}' for i in range(0, 4))
     return digest
 
